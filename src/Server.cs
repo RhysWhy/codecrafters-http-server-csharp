@@ -15,7 +15,7 @@ int receivedBytes = await socket.ReceiveAsync(requestBuffer);
 var lines = System.Text.Encoding.UTF8.GetString(requestBuffer).Split("\r\n");
 
 var line0Parts = lines[0].Split(" ");
-var (method, pathParts, httpVerb) = (line0Parts[0], line0Parts[1].Split("/"), line0Parts[2]);
+var (method, pathParts, httpVerb) = (line0Parts[0], line0Parts[1].Split("/", StringSplitOptions.RemoveEmptyEntries), line0Parts[2]);
 
 string response;
 
