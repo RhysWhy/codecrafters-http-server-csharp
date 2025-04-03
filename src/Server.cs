@@ -25,7 +25,7 @@ switch (pathParts[0])
     case "echo":
         {
             var content = pathParts[1];
-            response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n{content}";
+            response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
             break;
         }
     default: { response = $"{httpVerb} 404 Not Found\r\n\r\n"; break; }
