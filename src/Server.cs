@@ -7,13 +7,13 @@ server.Start();
 while (true)
 {
     var socket = server.AcceptSocket(); // wait for client
-    await Task.Run(() => HandleSocket(socket));
+    Task.Run(() => HandleSocket(socket));
 }
 
-static async Task HandleSocket(Socket socket)
+static Task HandleSocket(Socket socket)
 {
     var requestBuffer = new byte[1024];
-    int receivedBytes = await socket.ReceiveAsync(requestBuffer);
+    int receivedBytes = socket.Receive(requestBuffer);
 
     var lines = System.Text.Encoding.UTF8.GetString(requestBuffer).Split("\r\n");
 
@@ -40,5 +40,7 @@ static async Task HandleSocket(Socket socket)
         response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
     }
 
-    await socket.SendAsync(System.Text.Encoding.UTF8.GetBytes(response));
+    socket.Send(System.Text.Encoding.UTF8.GetBytes(response));
+
+    return Task.CompletedTask;
 }
