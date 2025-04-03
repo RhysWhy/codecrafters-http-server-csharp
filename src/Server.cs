@@ -15,8 +15,20 @@ int receivedBytes = await socket.ReceiveAsync(requestBuffer);
 var lines = System.Text.Encoding.UTF8.GetString(requestBuffer).Split("\r\n");
 
 var line0Parts = lines[0].Split(" ");
-var (method, path, httpVerb) = (line0Parts[0], line0Parts[1], line0Parts[2]);
+var (method, pathParts, httpVerb) = (line0Parts[0], line0Parts[1].Split("/"), line0Parts[2]);
 
-var response = path == "/" ?  $"{httpVerb} 200 OK\r\n\r\n" : $"{httpVerb} 404 Not Found\r\n\r\n";
+string response;
+
+switch (pathParts[0])
+{
+    case "/": { response = $"{httpVerb} 200 OK\r\n\r\n"; break; }
+    case "echo":
+        {
+            var content = pathParts[1];
+            response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n{content}";
+            break;
+        }
+    default: { response = $"{httpVerb} 404 Not Found\r\n\r\n"; break; }
+}
 
 await socket.SendAsync(System.Text.Encoding.UTF8.GetBytes(response));
