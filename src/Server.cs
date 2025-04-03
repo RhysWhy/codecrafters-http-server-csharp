@@ -55,12 +55,9 @@ static Task HandleSocket(Socket socket)
         }
         else if (method == "POST")
         {
-            if (!File.Exists(fileLocation))
-            {
                 var requestBody = pathParts[pathParts.Length - 1];
                 File.WriteAllText(fileLocation, requestBody);
                 response = $"{httpVerb} 201 Created\r\n\r\n";
-            }
         }
     }
 
