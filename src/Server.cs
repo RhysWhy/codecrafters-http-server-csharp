@@ -45,10 +45,22 @@ static Task HandleSocket(Socket socket)
         var directory = arguments[2];
         var fileName = pathParts[1];
         var fileLocation = Path.Combine(directory, fileName);
-        if (File.Exists(fileLocation))
+        if (method == "GET")
         {
-            var content = File.ReadAllText(fileLocation);
-            response = $"{httpVerb} 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+            if (File.Exists(fileLocation))
+            {
+                var content = File.ReadAllText(fileLocation);
+                response = $"{httpVerb} 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+            }
+        }
+        else if (method == "POST")
+        {
+            if (!File.Exists(fileLocation))
+            {
+                var requestBody = pathParts[pathParts.Length - 1];
+                File.WriteAllText(fileLocation, requestBody);
+                response = $"{httpVerb} 201 Created\r\n\r\n";
+            }
         }
     }
 
