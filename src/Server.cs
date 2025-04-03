@@ -39,6 +39,18 @@ static Task HandleSocket(Socket socket)
         }
         response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
     }
+    else if (pathParts[0] == "files")
+    {
+        var arguments = Environment.GetCommandLineArgs();
+        var directory = arguments[2];
+        var fileName = pathParts[1];
+        var fileLocation = Path.Combine(directory, fileName);
+        if (File.Exists(fileLocation))
+        {
+            var content = File.ReadAllText(fileLocation);
+            response = $"{httpVerb} 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+        }
+    }
 
     socket.Send(System.Text.Encoding.UTF8.GetBytes(response));
 
