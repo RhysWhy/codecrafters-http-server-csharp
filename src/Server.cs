@@ -1,6 +1,7 @@
 using codecrafters_http_server.src;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 TcpListener server = new TcpListener(IPAddress.Any, 4221);
 server.Start();
@@ -14,18 +15,27 @@ while (true)
 static Task HandleSocket(Socket socket)
 {
     var arguments = Environment.GetCommandLineArgs();
-    var directory = arguments[2];
+    var directory = string.Empty;
+    if (arguments.Length >= 3)
+    {
+        directory = arguments[2];
+    }
 
     var requestBuffer = new byte[1024];
     int receivedBytes = socket.Receive(requestBuffer);
 
-    var requestString = System.Text.Encoding.UTF8.GetString(requestBuffer);
-    Console.WriteLine(requestString);
+    var requestString = Encoding.UTF8.GetString(requestBuffer);
 
     var request = Request.Parse(requestString);
+    var response = HandleRequest(directory, request);
 
-    Console.WriteLine(request);
+    socket.Send(Encoding.UTF8.GetBytes(response.ToString()));
 
+    return Task.CompletedTask;
+}
+
+static Response HandleRequest(string directory, Request request)
+{
     var statusCode = 404;
     var statusPhrase = "Not Found";
     var headers = new Dictionary<string, string>();
@@ -81,8 +91,5 @@ static Task HandleSocket(Socket socket)
         }
     }
 
-    var response = new Response(request.HttpVersion, statusCode, statusPhrase, headers, body);
-    socket.Send(response.ToBytes());
-
-    return Task.CompletedTask;
+    return new Response(request.HttpVersion, statusCode, statusPhrase, headers, body);
 }

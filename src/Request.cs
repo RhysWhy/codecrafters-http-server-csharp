@@ -62,9 +62,4 @@ public class Request
             return null;
         }
     }
-
-    public override string ToString()
-    {
-        return $"{HttpMethod} {Path} {HttpVersion} {Headers} {Body}";
-    }
 }

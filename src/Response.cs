@@ -19,13 +19,13 @@ public class Response
         Body = body;
     }
 
-    public byte[] ToBytes()
+    public override string ToString()
     {
         var headers = string.Empty;
         foreach (var header in Headers)
         {
             headers += $"{header.Key}: {header.Value}\r\n";
         }
-        return System.Text.Encoding.UTF8.GetBytes($"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n{Body}");
+        return $"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n{Body}";
     }
 }
