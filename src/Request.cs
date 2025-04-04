@@ -27,32 +27,40 @@ public class Request
         var headers = new Dictionary<string, string>();
         var body = string.Empty;
 
-        // Split on \r\n\r\n to divide into two segments
-        // 1: Request Line and Headers
-        // 2: Body
-        var segments = inputString.Split("\r\n\r\n");
-
-        // Split the first segment into request line (first entry) and headers (every other entry) separately
-        var requestAndHeaders = segments[0].Split("\r\n");
-
-        var requestParts = requestAndHeaders[0].Split(" ");
-        (httpMethod, path, httpVersion) = (requestParts[0], requestParts[1], requestParts[2]);
-
-        for (int i = 1; i < requestAndHeaders.Length; i++)
+        try
         {
-            var headerParts = requestAndHeaders[i].Split(": ", StringSplitOptions.RemoveEmptyEntries);
-            if (headerParts.Length >= 2)
+            // Split on \r\n\r\n to divide into two segments
+            // 1: Request Line and Headers
+            // 2: Body
+            var segments = inputString.Split("\r\n\r\n");
+
+            // Split the first segment into request line (first entry) and headers (every other entry) separately
+            var requestAndHeaders = segments[0].Split("\r\n");
+
+            var requestParts = requestAndHeaders[0].Split(" ");
+            (httpMethod, path, httpVersion) = (requestParts[0], requestParts[1], requestParts[2]);
+
+            for (int i = 1; i < requestAndHeaders.Length; i++)
             {
-                var headerName = headerParts[0];
-                var headerValue = headerParts[1];
+                var headerParts = requestAndHeaders[i].Split(": ", StringSplitOptions.RemoveEmptyEntries);
+                if (headerParts.Length >= 2)
+                {
+                    var headerName = headerParts[0];
+                    var headerValue = headerParts[1];
 
-                headers.TryAdd(headerName, headerValue);
+                    headers.TryAdd(headerName, headerValue);
+                }
             }
+
+            body = segments[1];
+
+            return new Request(httpMethod, path, httpVersion, headers, body);
         }
-
-        body = segments[1];
-
-        return new Request(httpMethod, path, httpVersion, headers, body);
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex);
+            return null;
+        }
     }
 
     public override string ToString()
