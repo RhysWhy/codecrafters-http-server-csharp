@@ -21,6 +21,8 @@ static Task HandleSocket(Socket socket)
 
     var request = Request.Parse(System.Text.Encoding.UTF8.GetString(requestBuffer));
 
+    Console.WriteLine(request);
+
     var statusCode = 404;
     var statusPhrase = "Not Found";
     var headers = new Dictionary<string, string>();

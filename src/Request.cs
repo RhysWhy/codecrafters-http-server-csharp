@@ -54,4 +54,9 @@ public class Request
 
         return new Request(httpMethod, path, httpVersion, headers, body);
     }
+
+    public override string ToString()
+    {
+        return $"{HttpMethod} {Path} {HttpVersion} {Headers} {Body}";
+    }
 }
