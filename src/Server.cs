@@ -19,7 +19,10 @@ static Task HandleSocket(Socket socket)
     var requestBuffer = new byte[1024];
     int receivedBytes = socket.Receive(requestBuffer);
 
-    var request = Request.Parse(System.Text.Encoding.UTF8.GetString(requestBuffer));
+    var requestString = System.Text.Encoding.UTF8.GetString(requestBuffer);
+    Console.WriteLine(requestString);
+
+    var request = Request.Parse(requestString);
 
     Console.WriteLine(request);
 
