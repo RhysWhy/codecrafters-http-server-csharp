@@ -55,9 +55,13 @@ static Task HandleSocket(Socket socket)
         }
         else if (method == "POST")
         {
-                var requestBody = lines[lines.Length - 1];
-                File.WriteAllText(fileLocation, requestBody);
-                response = $"{httpVerb} 201 Created\r\n\r\n";
+            var requestBody = lines[lines.Length - 1];
+
+            var contentLengthHeader = lines.First(h => h.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase));
+            var contentLength = int.Parse(contentLengthHeader[16..]);
+
+            File.WriteAllText(fileLocation, requestBody.AsSpan(0, contentLength));
+            response = $"{httpVerb} 201 Created\r\n\r\n";
         }
     }
 
