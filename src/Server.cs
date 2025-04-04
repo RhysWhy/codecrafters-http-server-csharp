@@ -1,3 +1,4 @@
+using codecrafters_http_server.src;
 using System.Net;
 using System.Net.Sockets;
 
@@ -12,60 +13,71 @@ while (true)
 
 static Task HandleSocket(Socket socket)
 {
+    var arguments = Environment.GetCommandLineArgs();
+    var directory = arguments[2];
+
     var requestBuffer = new byte[1024];
     int receivedBytes = socket.Receive(requestBuffer);
 
-    var lines = System.Text.Encoding.UTF8.GetString(requestBuffer).Split("\r\n");
+    var request = Request.Parse(System.Text.Encoding.UTF8.GetString(requestBuffer));
 
-    var line0Parts = lines[0].Split(" ");
-    var (method, pathParts, httpVerb) = (line0Parts[0], line0Parts[1].Split("/", StringSplitOptions.RemoveEmptyEntries), line0Parts[2]);
+    var statusCode = 404;
+    var statusPhrase = "Not Found";
+    var headers = new Dictionary<string, string>();
+    var body = string.Empty;
 
-    var response = $"{httpVerb} 404 Not Found\r\n\r\n";
-
-    if (pathParts == null || pathParts.Length == 0) { response = $"{httpVerb} 200 OK\r\n\r\n"; }
-    else if (pathParts[0] == "echo")
+    if (request.Path == "/") { statusCode = 200; statusPhrase = "OK"; }
+    else if (request.Path.StartsWith("/echo/"))
     {
-        var content = pathParts[1];
-        response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+        body = request.Path["/echo/".Length..];
+        headers.Add("Content-Type", "text/plain");
+        headers.Add("Content-Length", body.Length.ToString());
+        statusCode = 200;
+        statusPhrase = "OK";
     }
-    else if (pathParts[0] == "user-agent")
+    else if (request.Path.StartsWith("/user-agent"))
     {
-        var content = string.Empty;
-        if (lines.Any(h => h.StartsWith("User-Agent: ", StringComparison.OrdinalIgnoreCase)))
+        var hasHeader = request.Headers.TryGetValue("User-Agent", out string userAgentHeader);
+        if (hasHeader)
         {
-            var userAgentHeader = lines.First(h => h.StartsWith("User-Agent: ", StringComparison.OrdinalIgnoreCase));
-            content = userAgentHeader.Replace("User-Agent: ", string.Empty, StringComparison.OrdinalIgnoreCase)
-                                     .Replace("\r\n", string.Empty);
+            body = userAgentHeader;
+            headers.Add("Content-Type", "text/plain");
+            headers.Add("Content-Length", body.Length.ToString());
+            statusCode = 200;
+            statusPhrase = "OK";
         }
-        response = $"{httpVerb} 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content.Length}\r\n\r\n{content}";
     }
-    else if (pathParts[0] == "files")
+    else if (request.Path.StartsWith("/files/"))
     {
-        var arguments = Environment.GetCommandLineArgs();
-        var directory = arguments[2];
-        var fileName = pathParts[1];
+        var fileName = request.Path["/files/".Length..];
         var fileLocation = Path.Combine(directory, fileName);
-        if (method == "GET")
+        if (request.HttpMethod == "GET")
         {
             if (File.Exists(fileLocation))
             {
-                var content = File.ReadAllText(fileLocation);
-                response = $"{httpVerb} 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {content.Length}\r\n\r\n{content}";
+                body = File.ReadAllText(fileLocation);
+                headers.Add("Content-Type", "application/octet-stream");
+                headers.Add("Content-Length", body.Length.ToString());
+                statusCode = 200;
+                statusPhrase = "OK";
             }
         }
-        else if (method == "POST")
+        else if (request.HttpMethod == "POST")
         {
-            var requestBody = lines[lines.Length - 1];
+            var hasHeader = request.Headers.TryGetValue("Content-Length", out string contentLengthHeader);
+            if (hasHeader)
+            {
+                var contentLength = int.Parse(contentLengthHeader);
+                File.WriteAllText(fileLocation, request.Body.AsSpan(0, contentLength));
 
-            var contentLengthHeader = lines.First(h => h.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase));
-            var contentLength = int.Parse(contentLengthHeader[16..]);
-
-            File.WriteAllText(fileLocation, requestBody.AsSpan(0, contentLength));
-            response = $"{httpVerb} 201 Created\r\n\r\n";
+                statusCode = 201;
+                statusPhrase = "Created";
+            }
         }
     }
 
-    socket.Send(System.Text.Encoding.UTF8.GetBytes(response));
+    var response = new Response(request.HttpVersion, statusCode, statusPhrase, headers, body);
+    socket.Send(response.ToBytes());
 
     return Task.CompletedTask;
 }
