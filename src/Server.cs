@@ -16,10 +16,7 @@ static Task HandleSocket(Socket socket)
 {
     var arguments = Environment.GetCommandLineArgs();
     var directory = string.Empty;
-    if (arguments.Length >= 3)
-    {
-        directory = arguments[2];
-    }
+    if (arguments.Length >= 3) { directory = arguments[2]; }
 
     var requestBuffer = new byte[1024];
     int receivedBytes = socket.Receive(requestBuffer);
@@ -88,6 +85,15 @@ static Response HandleRequest(string directory, Request request)
                 statusCode = 201;
                 statusPhrase = "Created";
             }
+        }
+    }
+
+    if (request.Headers.ContainsKey("Accept-Encoding"))
+    {
+        var encoding = request.Headers["Accept-Encoding"];
+        if (encoding == "gzip")
+        {
+            headers.Add("Content-Encoding", "gzip");
         }
     }
 
