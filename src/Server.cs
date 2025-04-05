@@ -65,10 +65,14 @@ static Response HandleRequest(string directory, Request request)
             gzipStream.Close();
 
             bodyBytes = memStream.ToArray();
+            headers.Add("Content-Length", bodyBytes.ToString());
         }
-
+        else
+        {
+            headers.Add("Content-Length", body.Length.ToString());
+        }
+        
         headers.Add("Content-Type", "text/plain");
-        headers.Add("Content-Length", body.Length.ToString());
         statusCode = 200;
         statusPhrase = "OK";
     }
