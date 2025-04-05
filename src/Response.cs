@@ -11,14 +11,16 @@ public class Response
     public readonly IReadOnlyDictionary<string, string> Headers;
 
     public readonly string Body;
+    public readonly byte[] BodyBytes;
 
-    public Response(string httpVersion, int statusCode, string statusPhrase, IReadOnlyDictionary<string, string> headers, string body)
+    public Response(string httpVersion, int statusCode, string statusPhrase, IReadOnlyDictionary<string, string> headers, string body, byte[] bodyBytes)
     {
         HttpVersion = httpVersion;
         StatusCode = statusCode;
         StatusPhrase = statusPhrase;
         Headers = headers;
         Body = body;
+        BodyBytes = bodyBytes;
     }
 
     public byte[] ToBytes()
@@ -33,7 +35,7 @@ public class Response
 
         if (gzip)
         {
-            return [..Encoding.UTF8.GetBytes($"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n"), ..Encoding.UTF8.GetBytes(Body)];
+            return [..Encoding.UTF8.GetBytes($"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n"), ..BodyBytes];
         }
         else
         {

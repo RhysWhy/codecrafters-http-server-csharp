@@ -38,6 +38,7 @@ static Response HandleRequest(string directory, Request request)
     var statusPhrase = "Not Found";
     var headers = new Dictionary<string, string>();
     var body = string.Empty;
+    var bodyBytes = new byte[1024];
 
     var gzip = false;
     if (request.Headers.ContainsKey("Accept-Encoding"))
@@ -56,14 +57,14 @@ static Response HandleRequest(string directory, Request request)
         body = request.Path["/echo/".Length..];
         if (gzip)
         {
-            var bodyBytes = Encoding.UTF8.GetBytes(body);
+            var bytes = Encoding.UTF8.GetBytes(body);
             using var memStream = new MemoryStream();
             using var gzipStream = new GZipStream(memStream, CompressionMode.Compress, true);
-            gzipStream.Write(bodyBytes, 0, bodyBytes.Length);
+            gzipStream.Write(bytes, 0, bytes.Length);
             gzipStream.Flush();
             gzipStream.Close();
 
-            body = Encoding.UTF8.GetString(memStream.ToArray());
+            bodyBytes = memStream.ToArray();
         }
 
         headers.Add("Content-Type", "text/plain");
@@ -112,5 +113,5 @@ static Response HandleRequest(string directory, Request request)
         }
     }
 
-    return new Response(request.HttpVersion, statusCode, statusPhrase, headers, body);
+    return new Response(request.HttpVersion, statusCode, statusPhrase, headers, body, bodyBytes);
 }
