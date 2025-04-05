@@ -1,4 +1,5 @@
 using codecrafters_http_server.src;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -38,10 +39,32 @@ static Response HandleRequest(string directory, Request request)
     var headers = new Dictionary<string, string>();
     var body = string.Empty;
 
+    var gzip = false;
+    if (request.Headers.ContainsKey("Accept-Encoding"))
+    {
+        var encodings = request.Headers["Accept-Encoding"].Split(",", StringSplitOptions.TrimEntries);
+        if (encodings.Contains("gzip"))
+        {
+            headers.Add("Content-Encoding", "gzip");
+            gzip = true;
+        }
+    }
+
     if (request.Path == "/") { statusCode = 200; statusPhrase = "OK"; }
     else if (request.Path.StartsWith("/echo/"))
     {
         body = request.Path["/echo/".Length..];
+        if (gzip)
+        {
+            using var memIn = new MemoryStream(Encoding.UTF8.GetBytes(body));
+            using var memOut = new MemoryStream();
+            using (var gzipStream = new GZipStream(memIn, CompressionMode.Compress))
+            {
+                gzipStream.CopyTo(memOut);
+            }
+            body = Encoding.UTF8.GetString(memOut.ToArray());
+        }
+
         headers.Add("Content-Type", "text/plain");
         headers.Add("Content-Length", body.Length.ToString());
         statusCode = 200;
@@ -85,15 +108,6 @@ static Response HandleRequest(string directory, Request request)
                 statusCode = 201;
                 statusPhrase = "Created";
             }
-        }
-    }
-
-    if (request.Headers.ContainsKey("Accept-Encoding"))
-    {
-        var encodings = request.Headers["Accept-Encoding"].Split(",", StringSplitOptions.TrimEntries);
-        if (encodings.Contains("gzip"))
-        {
-            headers.Add("Content-Encoding", "gzip");
         }
     }
 
