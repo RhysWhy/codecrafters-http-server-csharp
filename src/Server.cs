@@ -38,7 +38,7 @@ static Response HandleRequest(string directory, Request request)
     var statusPhrase = "Not Found";
     var headers = new Dictionary<string, string>();
     var body = string.Empty;
-    var bodyBytes = new byte[1024];
+    byte[] bodyBytes = null;
 
     var gzip = false;
     if (request.Headers.ContainsKey("Accept-Encoding"))
