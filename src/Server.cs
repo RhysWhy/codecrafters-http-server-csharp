@@ -27,7 +27,7 @@ static Task HandleSocket(Socket socket)
     var request = Request.Parse(requestString);
     var response = HandleRequest(directory, request);
 
-    socket.Send(Encoding.UTF8.GetBytes(response.ToString()));
+    socket.Send(response.ToBytes());
 
     return Task.CompletedTask;
 }

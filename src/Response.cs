@@ -1,4 +1,6 @@
-﻿namespace codecrafters_http_server.src;
+﻿using System.Text;
+
+namespace codecrafters_http_server.src;
 
 public class Response
 {
@@ -19,13 +21,23 @@ public class Response
         Body = body;
     }
 
-    public override string ToString()
+    public byte[] ToBytes()
     {
         var headers = string.Empty;
+        var gzip = false;
         foreach (var header in Headers)
         {
+            if (header.Key == "Content-Encoding" && header.Value.Contains("gzip")) { gzip = true; }
             headers += $"{header.Key}: {header.Value}\r\n";
         }
-        return $"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n{Body}";
+
+        if (gzip)
+        {
+            return [..Encoding.UTF8.GetBytes($"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n"), ..Encoding.UTF8.GetBytes(Body)];
+        }
+        else
+        {
+            return Encoding.UTF8.GetBytes($"{HttpVersion} {StatusCode} {StatusPhrase}\r\n{headers}\r\n{Body}");
+        }
     }
 }
