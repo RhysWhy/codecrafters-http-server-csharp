@@ -65,7 +65,7 @@ static Response HandleRequest(string directory, Request request)
             gzipStream.Close();
 
             bodyBytes = memStream.ToArray();
-            headers.Add("Content-Length", bodyBytes.ToString());
+            headers.Add("Content-Length", bodyBytes.Length.ToString());
         }
         else
         {
