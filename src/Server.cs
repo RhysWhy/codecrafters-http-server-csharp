@@ -90,7 +90,7 @@ static Response HandleRequest(string directory, Request request)
 
     if (request.Headers.ContainsKey("Accept-Encoding"))
     {
-        var encodings = request.Headers["Accept-Encoding"].Split(",", StringSplitOptions.RemoveEmptyEntries);
+        var encodings = request.Headers["Accept-Encoding"].Split(",", StringSplitOptions.TrimEntries);
         if (encodings.Contains("gzip"))
         {
             headers.Add("Content-Encoding", "gzip");
