@@ -56,13 +56,14 @@ static Response HandleRequest(string directory, Request request)
         body = request.Path["/echo/".Length..];
         if (gzip)
         {
-            using var memIn = new MemoryStream(Encoding.UTF8.GetBytes(body));
-            using var memOut = new MemoryStream();
-            using (var gzipStream = new GZipStream(memIn, CompressionMode.Compress))
-            {
-                gzipStream.CopyTo(memOut);
-            }
-            body = Encoding.UTF8.GetString(memOut.ToArray());
+            var bodyBytes = Encoding.UTF8.GetBytes(body);
+            using var memStream = new MemoryStream();
+            using var gzipStream = new GZipStream(memStream, CompressionMode.Compress, true);
+            gzipStream.Write(bodyBytes, 0, bodyBytes.Length);
+            gzipStream.Flush();
+            gzipStream.Close();
+
+            body = Encoding.UTF8.GetString(memStream.ToArray());
         }
 
         headers.Add("Content-Type", "text/plain");
